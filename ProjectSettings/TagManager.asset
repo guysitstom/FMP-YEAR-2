@@ -3,7 +3,13 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - PointReject
+  - Red
+  - Green
+  - Yellow
+  - Pink
+  - Orange
   layers:
   - Default
   - TransparentFX
@@ -11,7 +17,7 @@ TagManager:
   - 
   - Water
   - UI
-  - InvisableGeometry
+  - InvisibleGeometry
   - 
   - 
   - 

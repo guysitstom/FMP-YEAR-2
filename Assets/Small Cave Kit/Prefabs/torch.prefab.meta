@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b226c2c9ed14da940b027de536630825
+timeCreated: 1446659398
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49372
+  packageName: Small Cave Kit
+  packageVersion: 1.0
+  assetPath: Assets/Small Cave Kit/Prefabs/torch.prefab
+  uploadId: 88651

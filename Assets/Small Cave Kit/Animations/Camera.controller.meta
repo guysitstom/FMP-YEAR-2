@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a9823807a7e3c184898870a73abd0d18
+timeCreated: 1446651544
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49372
+  packageName: Small Cave Kit
+  packageVersion: 1.0
+  assetPath: Assets/Small Cave Kit/Animations/Camera.controller
+  uploadId: 88651
