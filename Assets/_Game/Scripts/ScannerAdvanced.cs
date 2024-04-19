@@ -126,8 +126,8 @@ namespace LRS
 
             if (_fire.IsPressed())
             {
-                
-                if(battery > 0)
+
+                if (battery > 0)
                 {
                     battery = battery - 1;
                     for (int i = 0; i < pointsPerScan; i++)
@@ -184,7 +184,7 @@ namespace LRS
                     });
                 }
             }
-                
+
             else
             {
                 _lineRenderer.enabled = false;
@@ -197,4 +197,3 @@ namespace LRS
         }
     }
 }
-
