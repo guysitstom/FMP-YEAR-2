@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.VFX;
 using Random = UnityEngine.Random;
+using UnityEngine.UI;
 
 namespace LRS
 {
@@ -29,7 +31,7 @@ namespace LRS
         [SerializeField] private int pointsPerScan = 100;
         [SerializeField] private float range = 10f;
         [SerializeField] private float battery = 100f;
-
+        [SerializeField] private Slider power;
         [SerializeField] private int resolution = 100;
 
         private bool _createNewVFX;
@@ -123,13 +125,13 @@ namespace LRS
 
         private void Scan()
         {
-
+            power.value = battery;
             if (_fire.IsPressed())
             {
 
                 if (battery > 0)
                 {
-                    battery = battery - 1;
+                    battery = battery - 0.5f;
                     for (int i = 0; i < pointsPerScan; i++)
                     {
                         Vector3 randomPoint = Random.insideUnitSphere * radius;
@@ -190,7 +192,7 @@ namespace LRS
                 _lineRenderer.enabled = false;
                 if (battery < 100)
                 {
-                    battery = battery + 0.1f;
+                    battery = battery + 0.5f;
 
                 }
             }

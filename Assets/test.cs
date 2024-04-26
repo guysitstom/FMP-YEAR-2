@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,8 +15,6 @@ namespace LRS
         private LineRenderer _lineRenderer;
 
         [SerializeField] private List<PointsData> pointsData = new List<PointsData>();
-        private List<CloneData> cloneDataList = new List<CloneData>();
-
 
         private const string REJECT_LAYER_NAME = "PointReject";
         private const string TEXTURE_NAME = "PositionsTexture";
@@ -32,9 +31,8 @@ namespace LRS
         [SerializeField] private int pointsPerScan = 100;
         [SerializeField] private float range = 10f;
         [SerializeField] private int resolution = 100;
-        [SerializeField] private float battery = 100f;
 
-        private int nextCloneNumber = 1; // Counter to assign unique numbers to clones
+        private bool canCreateNewVisualEffect = true;
 
         private void Start()
         {
@@ -65,197 +63,144 @@ namespace LRS
             }
         }
 
-
         private void ApplyPositions(List<Vector3> positionsList, VisualEffect currentVFX, Texture2D texture, Color[] positions)
         {
             Vector3[] pos = positionsList.ToArray();
             Vector3 vfxPos = currentVFX.transform.position;
-
             int loopLength = texture.width * texture.height;
             int posListLen = pos.Length;
 
             for (int i = 0; i < loopLength; i++)
             {
-                Color data;
-
-                if (i < posListLen - 1)
-                {
-                    data = new Color(pos[i].x - vfxPos.x, pos[i].y - vfxPos.y, pos[i].z - vfxPos.z, 1);
-                }
-                else
-                {
-                    data = new Color(0, 0, 0, 0);
-                }
+                Color data = i < posListLen - 1 ? new Color(pos[i].x - vfxPos.x, pos[i].y - vfxPos.y, pos[i].z - vfxPos.z, 1) : new Color(0, 0, 0, 0);
                 positions[i] = data;
             }
 
             texture.SetPixels(positions);
             texture.Apply();
-
             currentVFX.SetTexture(TEXTURE_NAME, texture);
             currentVFX.Reinit();
         }
 
-
         private VisualEffect NewVisualEffect(VisualEffect visualEffect, out Texture2D texture, out Color[] positions)
         {
-            texture = new Texture2D(resolution, resolution, TextureFormat.RGBAFloat, false);
-            positions = new Color[resolution * resolution];
-
             VisualEffect vfx = Instantiate(visualEffect, transform.position, Quaternion.identity, vfxContainer.transform);
             vfx.SetUInt(RESOLUTION_PARAMETER_NAME, (uint)resolution);
-
+            texture = new Texture2D(resolution, resolution, TextureFormat.RGBAFloat, false);
+            positions = new Color[resolution * resolution];
             return vfx;
         }
 
-
         private void Scan()
         {
-            if (_fire.IsPressed())
+            if (_fire.triggered)
             {
 
-                if (battery > 0)
+
+                // Allow CreateNewVisualEffect() after 4 seconds since last call
+                if (canCreateNewVisualEffect)
                 {
-                    foreach (PointsData data in pointsData)
+                    StartCoroutine(DelayedCreateVisualEffect());
+                }
+
+
+                for (int i = 0; i < pointsPerScan; i++)
+                {
+                    Vector3 randomPoint = Random.insideUnitSphere * radius;
+                    randomPoint += castPoint.position;
+                    Vector3 dir = (randomPoint - transform.position).normalized;
+
+                    if (Physics.Raycast(transform.position, dir, out RaycastHit hit, range, layerMask))
                     {
-                        foreach (string tag in data.includedTags)
+                        if (hit.collider.CompareTag(REJECT_LAYER_NAME)) continue;
+                        // On Hit
+                        // check which color was hit
+                        int resolution2 = resolution * resolution;
+
+                        foreach (PointsData data in pointsData)
                         {
-                            // Clone PointsData based on tag
-                            if (_fire.IsPressed() && tag != REJECT_LAYER_NAME)
+                            foreach (string tag in data.includedTags)
                             {
-                                PointsData originalData = data;
-                                PointsData clone = Instantiate(originalData);
-                                clone.ClearData();
-
-                                // Instantiate a new GameObject and set its position and rotation
-                                GameObject cloneGameObject = new GameObject();
-                                cloneGameObject.transform.position = originalData.prefab.transform.position;
-                                cloneGameObject.transform.rotation = originalData.prefab.transform.rotation;
-
-                                // Clone the VisualEffect component
-                                VisualEffect originalVFX = originalData.prefab.GetComponent<VisualEffect>();
-                                VisualEffect cloneVFX = cloneGameObject.AddComponent<VisualEffect>();
-                                cloneVFX.visualEffectAsset = originalVFX.visualEffectAsset; // Set the same visual effect asset
-
-                                // Make the cloneGameObject a child of vfxContainer
-                                cloneGameObject.transform.SetParent(vfxContainer.transform);
-
-
-                                // Assign a unique number to the clone
-                                int cloneNumber = GetNextCloneNumber();
-
-                                // Add the clone data to the list
-                                cloneDataList.Add(new CloneData(originalData, cloneGameObject, cloneNumber));
-                                for (int i = 0; i < pointsPerScan; i++)
+                                if (hit.collider.CompareTag(tag))
                                 {
-                                    Vector3 randomPoint = Random.insideUnitSphere * radius;
-                                    randomPoint += castPoint.position;
-                                    Vector3 dir = (randomPoint - transform.position).normalized;
-
-                                    if (Physics.Raycast(transform.position, dir, out RaycastHit hit, range, layerMask))
+                                    if (data.positionsList.Count < resolution * resolution)
                                     {
-                                        if (hit.collider.CompareTag(REJECT_LAYER_NAME)) continue;
-
-                                        foreach (PointsData data2 in pointsData)
-                                        {
-                                            if (data2.includedTags.Contains(hit.collider.tag))
-                                            {
-                                                if (data2.positionsList.Count < resolution * resolution)
-                                                {
-                                                    data2.positionsList.Add(hit.point);
-                                                }
-                                                else if (reuseOldParticles)
-                                                {
-                                                    data2.positionsList.RemoveAt(0);
-                                                    data2.positionsList.Add(hit.point);
-                                                }
-                                                else
-                                                {
-                                                    data2.ClearData();
-                                                    data2.currentVisualEffect = NewVisualEffect(data2.prefab, out data2.texture, out data2.positionsAsColors);
-                                                    data2.positionsList.Clear();
-                                                }
-                                            }
-                                        }
-
-                                        _lineRenderer.enabled = true;
-                                        _lineRenderer.SetPositions(new[] { transform.position, hit.point });
+                                        data.positionsList.Add(hit.point);
+                                    }
+                                    else if (reuseOldParticles)
+                                    {
+                                        data.positionsList.RemoveAt(0);
+                                        data.positionsList.Add(hit.point);
                                     }
                                     else
                                     {
-                                        Debug.DrawRay(transform.position, dir * range, Color.red);
-
+                                        data.currentVisualEffect = NewVisualEffect(data.prefab, out data.texture, out data.positionsAsColors);
+                                        data.positionsList.Clear();
                                     }
                                 }
+                            }
                         }
+
+                        _lineRenderer.enabled = true;
+                        _lineRenderer.SetPositions(new[] { transform.position, hit.point });
+                    }
+                    else
+                    {
+                        Debug.DrawRay(transform.position, dir * range, Color.red);
                     }
                 }
+
+                pointsData.ForEach(data => ApplyPositions(data.positionsList, data.currentVisualEffect, data.texture, data.positionsAsColors));
             }
             else
             {
-                if (battery < 100)
-                {
-                    battery = battery + 0.1f;
+                _lineRenderer.enabled = false;
+            }
+        }
 
+
+        private IEnumerator DelayedCreateVisualEffect()
+        {
+            // Prevent further calls to CreateNewVisualEffect() for 4 seconds
+            canCreateNewVisualEffect = false;
+
+            // Wait for 4 seconds
+            yield return new WaitForSeconds(4f);
+
+            // Allow CreateNewVisualEffect() again
+            canCreateNewVisualEffect = true;
+
+            // Call CreateNewVisualEffect()
+            CreateNewVisualEffect();
+        }
+
+
+        private void CreateNewVisualEffect()
+        {
+            // Create a new container for the children
+            GameObject newContainer = new GameObject("New_VFX_Container");
+
+            // Rename existing VisualEffect children of the vfxContainer
+            foreach (Transform child in vfxContainer.transform)
+            {
+                if (child.TryGetComponent(out VisualEffect vfx))
+                {
+                    // You can rename the children as per your requirement
+                    vfx.name = "Old_VisualEffect_" + vfx.GetInstanceID();
+                    child.SetParent(newContainer.transform);
                 }
             }
-             
 
-            
-            }
-
-            pointsData.ForEach(data => ApplyPositions(data.positionsList, data.currentVisualEffect, data.texture, data.positionsAsColors));
-
-            _lineRenderer.enabled = !_fire.triggered;
-        }
-
-
-        private int GetNextCloneNumber()
-        {
-            return nextCloneNumber++;
-        }
-
-
-        private void DestroyClones()
-        {
-            // Find the clone with the lowest numbered suffix
-            CloneData cloneToRemove = null;
-            int lowestCloneNumber = int.MaxValue;
-            foreach (CloneData cloneData in cloneDataList)
+            // Create new VisualEffect instxances
+            pointsData.ForEach(data =>
             {
-                if (cloneData.CloneNumber < lowestCloneNumber)
+                if (data.currentVisualEffect != null)
                 {
-                    lowestCloneNumber = cloneData.CloneNumber;
-                    cloneToRemove = cloneData;
+                    Destroy(data.currentVisualEffect.gameObject, 10f);
                 }
-            }
-
-            // Remove the clone with the lowest numbered suffix
-            if (cloneToRemove != null)
-            {
-                cloneDataList.Remove(cloneToRemove);
-                Destroy(cloneToRemove.ClonedGameObject);
-            }
+                data.currentVisualEffect = NewVisualEffect(data.prefab, out data.texture, out data.positionsAsColors);
+            });
         }
 
-        // Define CloneData class
-        public class CloneData
-        {
-            public PointsData OriginalPointsData { get; }
-            public GameObject ClonedGameObject { get; }
-            public int CloneNumber { get; }
-
-            public CloneData(PointsData originalPointsData, GameObject clonedGameObject, int cloneNumber)
-            {
-                OriginalPointsData = originalPointsData;
-                ClonedGameObject = clonedGameObject;
-                CloneNumber = cloneNumber;
-            }
-        }
-
-        // Other methods...
     }
-
 }
-
-
