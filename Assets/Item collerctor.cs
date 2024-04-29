@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace LRS
 {
@@ -26,6 +27,7 @@ namespace LRS
             if (itemCount > 4)
             {
                 text.text = "You have collected the gem in time well done";
+                SceneManager.LoadScene("Win");
             }
                
         }

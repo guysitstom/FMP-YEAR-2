@@ -12,5 +12,9 @@ namespace LRS
         {
             SceneManager.LoadScene("LevelOne");
         }
+        public void QuitGame()
+        {
+            Application.Quit();
+        }
     }
 }
