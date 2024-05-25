@@ -801,7 +801,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1170194078}
         m_TargetAssemblyTypeName: LRS.Buttons, Assembly-CSharp
-        m_MethodName: LevelOne
+        m_MethodName: Lose
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -861,6 +861,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9448f552d5f4b84587076a64c65cfc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
 --- !u!1 &1277162660
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,11 +7,19 @@ namespace LRS
 {
     public class Buttons : MonoBehaviour
     {
-        void Start () { Cursor.lockState = CursorLockMode.Confined; }
+        void Start () { Cursor.lockState = CursorLockMode.Confined;  }
         [SerializeField] Animator animator;
         public void LevelOne()
         {
             SceneManager.LoadScene("LevelOne");
+        }
+        public void Lose() 
+        {
+            if (Itemcollerctor.level)
+            {
+                SceneManager.LoadScene("LevelTwo");
+            }
+            else { SceneManager.LoadScene("LevelOne"); }
         }
         public void QuitGame()
         {

@@ -12,6 +12,7 @@ namespace LRS
         [SerializeField] int colectableAmount; 
         [SerializeField] TextMeshProUGUI text;
         [SerializeField] string scene;
+        public static bool level = false;
 
         void Start()
         {
@@ -30,6 +31,7 @@ namespace LRS
             {
                 text.text = "You have collected the gem in time well done";
                 SceneManager.LoadScene(scene);
+                level = true;
             }
                
         }
