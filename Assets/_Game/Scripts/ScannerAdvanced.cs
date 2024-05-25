@@ -50,12 +50,14 @@ namespace LRS
                 data.currentVisualEffect = NewVisualEffect(data.prefab, out data.texture, out data.positionsAsColors);
                 ApplyPositions(data.positionsList, data.currentVisualEffect, data.texture, data.positionsAsColors);
             });
+            Cursor.lockState = CursorLockMode.Locked;
         }
 
         private void FixedUpdate()
         {
+            Cursor.lockState = CursorLockMode.Locked;
             Scan();
-            ChangeRadius();
+            //ChangeRadius();
         }
 
         private void ChangeRadius()
