@@ -6,8 +6,7 @@ using UnityEngine.Playables;
 namespace LRS
 {
     public class Voiceacting : MonoBehaviour
-    {
-        
+    {        
         [SerializeField] GameObject player;
         [SerializeField] GameObject Trigger;
         [SerializeField] GameObject UI;
